@@ -1,14 +1,17 @@
-import React from 'react'
-import NumericKeys from './NumericKeys'
-import NumericOps from './NumericOps'
-import ConfirmButton from './ConfirmButton'
-import CalculatorDisplay from './CalculatorDisplay'
+import React from 'react';
+import classnames from 'classnames';
+import PropTypes from 'prop-types';
+
+import NumericKeys from './NumericKeys';
+import NumericOps from './NumericOps';
+import ConfirmButton from './ConfirmButton';
+import CalculatorDisplay from './CalculatorDisplay';
 import calc from './calc';
 
-const Calculator = ({close, displayValue, onChange, onComplete, backgroundColor, keyColor}) => {
+const Calculator = ({ onClose, displayValue, onChange, onComplete, className }) => {
   function handleNumberClick(number) {
     calc[number]();
-    onChange()
+    onChange();
   }
 
   function handleOperationClick(op) {
@@ -17,23 +20,34 @@ const Calculator = ({close, displayValue, onChange, onComplete, backgroundColor,
   }
 
   return (
-      <div className="calculator" style={{backgroundColor: backgroundColor}}>
-        <div className="close">
-          <button onClick={close}>X</button>
-        </div>
-        <div className="calculator-display">
-          <CalculatorDisplay text={displayValue} />
-        </div>
-        <div className="calculator-keyboard">
-          <NumericKeys backgroundColor={keyColor} onNumberClick={handleNumberClick} />
-          <div className="calculator-right">
-            <ConfirmButton confirmText="OK" onComplete={onComplete}  backgroundColor={keyColor}/>
-            <NumericOps backgroundColor={keyColor} onOperationClick={handleOperationClick} />
-          </div>
-        </div>
-
+    <div className={classnames('calculator', className)}>
+      <div className="close">
+        <button onClick={onClose}>X</button>
       </div>
-    );
-  }
+      <div className="calculator-display">
+        <CalculatorDisplay text={displayValue} />
+      </div>
+      <div className="calculator-keyboard">
+        <NumericKeys onNumberClick={handleNumberClick} />
+        <div className="calculator-right">
+          <ConfirmButton confirmText="OK" onComplete={onComplete} />
+          <NumericOps onOperationClick={handleOperationClick} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Calculator.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  displayValue: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onComplete: PropTypes.func.isRequired,
+  className: PropTypes.string,
+};
+
+Calculator.defaultProps = {
+  className: '',
+};
 
 export default Calculator;
