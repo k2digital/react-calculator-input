@@ -1,12 +1,17 @@
 import React from 'react'
+import classnames from 'classnames';
 
-var KeyButton = ({onClick, text, backgroundColor}) => {
-    
-    return (
-            <div className="button" role="button" onClick={() => {onClick(text)}} style={{backgroundColor: backgroundColor}} > 
-                <p>{text}</p>
-            </div>
-    )
+var KeyButton = ({
+  backgroundColor,
+  className,
+  onClick = () => {},
+  text,
+}) => {
+  return (
+    <div className={classnames("button", className)} role="button" onClick={() => {onClick(text)}} style={{backgroundColor: backgroundColor}} > 
+      <p>{text}</p>
+    </div>
+  )
 }
 
 export default KeyButton;

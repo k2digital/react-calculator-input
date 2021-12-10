@@ -1,108 +1,138 @@
 import React, { Component } from "react"
-import Calculator from './Calculator'
+import classnames from 'classnames';
 import PropTypes from 'prop-types'
 
-class NumericInput extends Component {
+import Calculator from './Calculator'
+import calc from './calc';
 
+const keyCodeSelectorMap = {
+  "Backspace":".num-key-right",
+  ".": ".num-key-left",
+  "=": ".confirmbutton",
+  "Enter": ".confirmbutton",
+  "enter": ".confirmbutton",
+  "+": ".num-op-plus",
+  "-": ".num-op-minus",
+  "*": ".num-op-times",
+  "/": ".num-op-divide",
+  //"F9": "+/-",
+  //"A": "AC",
+  //"a": "AC",
+  "Escape": ".close button",
+  //"C": "CE",
+  //"c": "CE",
+  0: '.num-key-zero',
+  1: '.num-key-one',
+  2: '.num-key-two',
+  3: '.num-key-three',
+  4: '.num-key-four',
+  5: '.num-key-five',
+  6: '.num-key-six',
+  7: '.num-key-seven',
+  8: '.num-key-eight',
+  9: '.num-key-nine',
+};
+
+
+class NumericInput extends Component {
     constructor(props) {
-        super(props)
-        this.state = {
-            className: "dnone",
-            inputValue: this.props.initialValue,
-            displayValue: "0",
-        };
-        this.inputRef = React.createRef();
+      super(props)
+      const initialValue = `${this.props.initialValue}`;
+      this.state = {
+        isVisible: false,
+        inputValue: initialValue,
+        internalValue: initialValue,
+        displayValue: initialValue,
+      };
+      this.inputRef = React.createRef();
+      this.calcRef = React.createRef();
+
+      calc['AC']();
+      let calcBuffer = [...initialValue];
+      while (calcBuffer.length) calc[calcBuffer.shift()]();
     }
+
+  moveCursorToEnd(state) {
+    const length = 1 + new String(state.inputValue).length;
+    this.inputRef.current.setSelectionRange(length, length);
+  }
 
     onFocus = (event) => {
-        var parsedValue = this.props.format === 'integer'
-            ? parseInt(event.target.value, 10)
-            : parseFloat(event.target.value);
-        this.setState({className: "dflex", displayValue: parsedValue.toString()});
-
+      var parsedValue = parseFloat(event.target.value);
+      this.setState({isVisible: true, displayValue: parsedValue.toString()});
     }
 
-    onComplete = () => {
-        var total = eval(this.state.displayValue).toFixed(4);
-        const parsedValue = this.props.format === 'integer'
-            ? parseInt(total, 10)
-            : parseFloat(total);
-        this.setState(
-            {className:"dnone", inputValue: parsedValue, displayValue: parsedValue.toString()},
-            this.proxyOnChangeOnRefWithValue(this.inputRef, parsedValue)
-        );
-    }
+    handleComplete = () => {
+      calc['=']();
+      this.setState({
+        isVisible: false,
+        inputValue: calc.getResult(),
+        displayValue: calc.getSteps(),
+      }, () => {
+        this.proxyOnChangeOnRefWithValue(this.inputRef, this.state.inputValue)
+      });
 
-    onChangeDisplay = (val) => {
-        var currentVal = this.state.displayValue
-        var newValue = val.toString()
-
-
-        /* delete */
-        if(val==='<') {
-            newValue = currentVal.slice(0,-1)
-            /* avoid blank screen */
-            if(newValue == '') {
-                newValue = '0'
-            }
-            this.setState({displayValue: newValue});
-            return
-        }
-
-        /* avoid double . insertion */
-        var lastNumber = currentVal.split(/\-|\+|\/|\*/).pop()
-        if(val==='.' && lastNumber.includes(".")){
-            return
-        }
-
-        /* if it's not the first character or if next value is . */  
-        if (currentVal != '0' || val == '.') {
-            if(currentVal == '') {
-                newValue = `0${val}`
-            } else {
-                newValue = `${currentVal}${val}`;    
-            }
-        }
-
-        var lastCharacter = currentVal.split('').pop()
-        if(['+', '-', '*', '/'].includes(val)) {
-            /* avoid consecutive operation insertion */
-            if(['+', '-', '*', '/'].includes(lastCharacter)) {
-                newValue = `${currentVal.slice(0,-1)}${val}`
-            }
-            /* avoid .+ situations */
-            if(lastCharacter == '.') {
-                newValue = `${currentVal}0${val}`
-            }
-        } 
-
-        this.setState({displayValue:newValue});
+      const inputEl = this.inputRef.current;
+      inputEl.blur();
     }
 
     handleChange = (event) => {
-        const parsedValue = this.props.format === 'integer'
-            ? parseInt(event.target.value, 10)
-            : parseFloat(event.target.value);
-        const value = isNaN(parsedValue) ? 0 : parsedValue;
-        const stringValue = value.toString();
-        this.setState(
-            {inputValue: value, displayValue: stringValue},
-            this.proxyOnChangeOnRefWithValue(this.inputRef, value)
-        );
+      const parsedValue = parseFloat(event.target.value);
+      const value = isNaN(parsedValue) ? 0 : parsedValue;
+      const stringValue = value.toString();
+      this.setState({
+        inputValue: value,
+        displayValue: stringValue
+      }, () => {
+        this.moveCursorToEnd(this.state);
+        this.proxyOnChangeOnRefWithValue(this.inputRef, value)
+      });
+    }
+
+    componentDidMount() {
+      document.body.addEventListener('keyup', this.onKeyUp);
+    }
+
+    componentWillUnmount() {
+      document.body.removeEventListener('keyup', this.onKeyUp);
     }
 
     onBlur = () => {
-        setTimeout(() => {
-            var active = document.activeElement
-            if(!active.classList.contains("calculator-wrapper") || active.id == this.props.id) {
-                this.setState({className: "dnone"});
-            }
-        }, 1);
+      setTimeout(() => {
+        var active = document.activeElement
+        if (!active.classList.contains("calculator-wrapper") || active.id == this.props.id) {
+          this.setState({isVisible: false});
+        }
+      }, 1);
 
     }
 
-    onClose = () => {
-        this.setState({className:"dnone"})
+    handleClose = () => {
+      const inputEl = this.inputRef.current;
+      inputEl.blur();
+      this.setState({isVisible: false})
+    }
+
+    onKeyUp = (event) => {
+      if (!this.state.isVisible) {
+        return;
+      }
+
+      var keyCode = event.key;
+      if (keyCode in keyCodeSelectorMap) {
+        event.preventDefault();
+
+        const el = this.calcRef.current.querySelector(keyCodeSelectorMap[keyCode]);
+        if (!el) {
+          throw new Error('react-calculator-input: Key binding missing!');
+        }
+
+        const clickEvent = new Event('click', {
+          bubbles: true,
+          target: {value: el, enumerable: true, writable: true},
+        });
+        el.dispatchEvent(clickEvent);
+      }
     }
 
     proxyOnChangeOnRefWithValue = (ref, value) => {
@@ -113,18 +143,36 @@ class NumericInput extends Component {
         this.props.onChange(event);
     }
 
-    sanitizeRenderProps = (props) => {
+    sanitizeRenderProps = ({...props}) => {
         delete props.ref;
         delete props.type;
         delete props.onFocus;
         delete props.onChange;
         delete props.onBlur;
+        delete props.initialValue;
         return props;
     }
 
+    handleChange = (val) => {
+        this.setState({
+          displayValue: calc.getSteps(),
+        });
+    }
+
+
     render() {
         const props = Object.assign({}, this.props);
-        const { label: labelProps, calculatorBackground: backgroundColor, labelPosition: labelPosition, calculatorKeyColor: calculatorKeyColor,  ...inputProps } = this.sanitizeRenderProps(props);
+        const {
+          label: labelProps,
+          calculatorBackground: backgroundColor,
+          labelPosition: labelPosition,
+          calculatorKeyColor: calculatorKeyColor, 
+          ...inputProps
+        } = this.sanitizeRenderProps(props);
+
+      this.sanitizeRenderProps(props);
+
+        const className = this.state.isVisible ? "dflex" : "dnone";
 
         return (
             <div className="numeric-input-component">
@@ -133,29 +181,30 @@ class NumericInput extends Component {
                     && <label className={props.labelClassName} htmlFor={props.id}>{props.label}</label>
                 }
                 <input
-                    ref={this.inputRef}
-                    id={props.id}
                     className={props.className}
-                    type="number"
+                    id={props.id}
                     name={props.name}
-                    onFocus={this.onFocus}
-                    value={this.state.inputValue}
-                    onChange={this.handleChange}
                     onBlur={this.onBlur}
+                    onChange={this.handleChange}
+                    onFocus={this.onFocus}
+                    ref={this.inputRef}
+                    type="text"
+                    value={this.state.inputValue}
+                    readOnly
                     {...inputProps}
                 />
                 {   props.label 
                     && props.labelPosition == "bottom" 
                     && <label className={props.labelClassName} htmlFor={props.id}>{props.label}</label>
                 } 
-                <div className={ "calculator-wrapper " + this.state.className } tabIndex="-1">
+                <div ref={this.calcRef} className={classnames("calculator-wrapper", className)} tabIndex="-1">
                     <Calculator
-                        onComplete={this.onComplete}
-                        displayValue={this.state.displayValue}
-                        onChangeDisplay={this.onChangeDisplay}
-                        close={this.onClose}
                         backgroundColor={props.calculatorBackground}
+                        onClose={this.handleClose}
+                        displayValue={this.state.displayValue}
                         keyColor={props.calculatorKeyColor}
+                        onChange={this.handleChange}
+                        onComplete={this.handleComplete}
                     />
                 </div>
             </div>
@@ -173,7 +222,6 @@ NumericInput.propTypes = {
     className: PropTypes.string,
     calculatorBackground: PropTypes.string,
     calculatorKeyColor: PropTypes.string,
-    format: PropTypes.oneOf(["integer", "float"])
 
 };
 
@@ -181,7 +229,6 @@ NumericInput.defaultProps = {
     labelPosition: "top",
     calculatorBackground: "#666",
     calculatorKeyColor: "#ccc",
-    format: "float",
     initialValue: 0
 }
 
