@@ -45,21 +45,18 @@ class NumericInput extends Component {
     };
     this.inputRef = React.createRef();
     this.calcRef = React.createRef();
-
-    calc['AC']();
-    let calcBuffer = [...initialValue];
-    while (calcBuffer.length) calc[calcBuffer.shift()]();
+    this.hydrateCalcBuffer(initialValue);
   }
 
-  moveCursorToEnd(state) {
-    const length = 1 + new String(state.inputValue).length;
-    this.inputRef.current.setSelectionRange(length, length);
+
+  componentDidMount() {
+    document.body.addEventListener('keyup', this.onKeyUp);
   }
 
-  onFocus = (event) => {
-    var parsedValue = parseFloat(event.target.value);
-    this.setState({ isVisible: true, displayValue: parsedValue.toString() });
-  };
+  componentWillUnmount() {
+    document.body.removeEventListener('keyup', this.onKeyUp);
+    clearTimeout(this.blurTimeout);
+  }
 
   handleComplete = () => {
     calc['=']();
@@ -94,21 +91,11 @@ class NumericInput extends Component {
     );
   };
 
-  componentDidMount() {
-    document.body.addEventListener('keyup', this.onKeyUp);
-  }
-
-  componentWillUnmount() {
-    document.body.removeEventListener('keyup', this.onKeyUp);
-    clearTimeout(this.blurTimeout);
-  }
-
   blurTimeout = 0;
-  onBlur = () => {
+  handleBlur = () => {
     this.blurTimeout = setTimeout(() => {
       var active = document.activeElement;
       if (!active.classList.contains('calculator-wrapper') || active.id == this.props.id) {
-        calc['AC']();
         this.setState({ isVisible: false });
       }
     }, 1);
@@ -118,6 +105,25 @@ class NumericInput extends Component {
     const inputEl = this.inputRef.current;
     inputEl.blur();
     this.setState({ isVisible: false });
+  };
+
+  hydrateCalcBuffer(value) {
+    calc['AC']();
+    let calcBuffer = [...`${value}`];
+    while (calcBuffer.length) calc[calcBuffer.shift()]();
+  }
+
+  moveCursorToEnd(state) {
+    const length = 1 + new String(state.inputValue).length;
+    this.inputRef.current.setSelectionRange(length, length);
+  }
+
+  handleFocus = (event) => {
+    var parsedValue = parseFloat(event.target.value);
+    this.hydrateCalcBuffer(parsedValue);
+    this.setState({
+      isVisible: true,
+    });
   };
 
   onKeyUp = (event) => {
@@ -157,9 +163,9 @@ class NumericInput extends Component {
   sanitizeRenderProps = ({ ...props }) => {
     delete props.ref;
     delete props.type;
-    delete props.onFocus;
+    delete props.handleFocus;
     delete props.onChange;
-    delete props.onBlur;
+    delete props.handleBlur;
     delete props.initialValue;
     return props;
   };
@@ -192,15 +198,15 @@ class NumericInput extends Component {
         {props.label && props.labelPosition == 'top' && label}
         <input
           className={props.className}
+          onBlur={this.handleBlur}
           id={props.id}
           name={props.name}
-          onBlur={this.onBlur}
           onChange={this.handleChange}
-          onFocus={this.onFocus}
+          onFocus={this.handleFocus}
+          readOnly
           ref={this.inputRef}
           type="text"
           value={this.state.inputValue}
-          readOnly
           {...inputProps}
         />
         {props.label && props.labelPosition == 'bottom' && label}
