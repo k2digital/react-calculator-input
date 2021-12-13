@@ -2,6 +2,3 @@ build
 node_modules
 *.log
 .vscode
-
-lib/*
-!./lib/index.js
