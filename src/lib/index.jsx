@@ -100,12 +100,15 @@ class NumericInput extends Component {
 
   componentWillUnmount() {
     document.body.removeEventListener('keyup', this.onKeyUp);
+    clearTimeout(this.blurTimeout);
   }
 
+  blurTimeout = 0;
   onBlur = () => {
-    setTimeout(() => {
+    this.blurTimeout = setTimeout(() => {
       var active = document.activeElement;
       if (!active.classList.contains('calculator-wrapper') || active.id == this.props.id) {
+        calc['AC']();
         this.setState({ isVisible: false });
       }
     }, 1);
