@@ -48,7 +48,6 @@ class NumericInput extends Component {
     this.hydrateCalcBuffer(initialValue);
   }
 
-
   componentDidMount() {
     document.body.addEventListener('keyup', this.onKeyUp);
   }
@@ -57,6 +56,38 @@ class NumericInput extends Component {
     document.body.removeEventListener('keyup', this.onKeyUp);
     clearTimeout(this.blurTimeout);
   }
+
+  blurTimeout = 0;
+  handleBlur = () => {
+    this.blurTimeout = setTimeout(() => {
+      var active = document.activeElement;
+      if (!active.classList.contains('calculator-wrapper') || active.id == this.props.id) {
+        this.setState({ isVisible: false });
+      }
+    }, 1);
+
+    if (typeof this.props.onBlur === 'function') {
+      this.props.onBlur(event);
+    }
+  };
+
+  handleChange = (val) => {
+    this.setState({
+      displayValue: calc.getSteps(),
+    });
+
+    this.proxyOnChangeOnRefWithValue(this.inputRef, this.state.inputValue);
+
+    if (typeof this.props.onChange === 'function') {
+      this.props.onChange(event);
+    }
+  };
+
+  handleClose = () => {
+    const inputEl = this.inputRef.current;
+    inputEl.blur();
+    this.setState({ isVisible: false });
+  };
 
   handleComplete = () => {
     calc['=']();
@@ -75,36 +106,16 @@ class NumericInput extends Component {
     inputEl.blur();
   };
 
-  handleChange = (event) => {
-    const parsedValue = parseFloat(event.target.value);
-    const value = isNaN(parsedValue) ? 0 : parsedValue;
-    const stringValue = value.toString();
-    this.setState(
-      {
-        inputValue: value,
-        displayValue: stringValue,
-      },
-      () => {
-        this.moveCursorToEnd(this.state);
-        this.proxyOnChangeOnRefWithValue(this.inputRef, value);
-      },
-    );
-  };
+  handleFocus = (event) => {
+    var parsedValue = parseFloat(event.target.value);
+    this.hydrateCalcBuffer(parsedValue);
+    this.setState({
+      isVisible: true,
+    });
 
-  blurTimeout = 0;
-  handleBlur = () => {
-    this.blurTimeout = setTimeout(() => {
-      var active = document.activeElement;
-      if (!active.classList.contains('calculator-wrapper') || active.id == this.props.id) {
-        this.setState({ isVisible: false });
-      }
-    }, 1);
-  };
-
-  handleClose = () => {
-    const inputEl = this.inputRef.current;
-    inputEl.blur();
-    this.setState({ isVisible: false });
+    if (typeof this.props.onFocus === 'function') {
+      this.props.onFocus(event);
+    }
   };
 
   hydrateCalcBuffer(value) {
@@ -117,14 +128,6 @@ class NumericInput extends Component {
     const length = 1 + new String(state.inputValue).length;
     this.inputRef.current.setSelectionRange(length, length);
   }
-
-  handleFocus = (event) => {
-    var parsedValue = parseFloat(event.target.value);
-    this.hydrateCalcBuffer(parsedValue);
-    this.setState({
-      isVisible: true,
-    });
-  };
 
   onKeyUp = (event) => {
     if (!this.state.isVisible) {
@@ -163,17 +166,11 @@ class NumericInput extends Component {
   sanitizeRenderProps = ({ ...props }) => {
     delete props.ref;
     delete props.type;
-    delete props.handleFocus;
+    delete props.onFocus;
     delete props.onChange;
-    delete props.handleBlur;
+    delete props.onBlur;
     delete props.initialValue;
     return props;
-  };
-
-  handleChange = (val) => {
-    this.setState({
-      displayValue: calc.getSteps(),
-    });
   };
 
   render() {
@@ -198,9 +195,9 @@ class NumericInput extends Component {
         {props.label && props.labelPosition == 'top' && label}
         <input
           className={props.className}
-          onBlur={this.handleBlur}
           id={props.id}
           name={props.name}
+          onBlur={this.handleBlur}
           onChange={this.handleChange}
           onFocus={this.handleFocus}
           readOnly
@@ -235,7 +232,9 @@ NumericInput.propTypes = {
   labelClassName: PropTypes.string,
   labelPosition: PropTypes.oneOf(['top', 'bottom']),
   name: PropTypes.string,
+  onBlur: PropTypes.func,
   onChange: PropTypes.func,
+  onFocus: PropTypes.func,
 };
 
 NumericInput.defaultProps = {
