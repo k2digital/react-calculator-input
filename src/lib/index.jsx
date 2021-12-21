@@ -75,12 +75,6 @@ class NumericInput extends Component {
     this.setState({
       displayValue: calc.getSteps(),
     });
-
-    this.proxyOnChangeOnRefWithValue(this.inputRef, this.state.inputValue);
-
-    if (typeof this.props.onChange === 'function') {
-      this.props.onChange(event);
-    }
   };
 
   handleClose = () => {
@@ -178,12 +172,12 @@ class NumericInput extends Component {
     const {
       label: labelProps,
       labelPosition: labelPosition,
+      className,
       ...inputProps
     } = this.sanitizeRenderProps(props);
 
     this.sanitizeRenderProps(props);
 
-    const className = this.state.isVisible ? 'dflex' : 'dnone';
     const label = (
       <label className={classnames('label', props.labelClassName)} htmlFor={props.id}>
         {props.label}
@@ -191,7 +185,7 @@ class NumericInput extends Component {
     );
 
     return (
-      <div className="numeric-input-component">
+      <div className={classnames('numeric-input-component', className)}>
         {props.label && props.labelPosition == 'top' && label}
         <input
           className={props.className}
@@ -209,7 +203,10 @@ class NumericInput extends Component {
         {props.label && props.labelPosition == 'bottom' && label}
         <div
           ref={this.calcRef}
-          className={classnames('calculator-wrapper', className)}
+          className={classnames('calculator-wrapper', {
+            dflex: this.state.isVisible,
+            dnone: !this.state.isVisible,
+          })}
           tabIndex="-1"
         >
           <Calculator

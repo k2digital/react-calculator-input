@@ -22,7 +22,7 @@ const Calculator = ({ onClose, displayValue, onChange, onComplete, className }) 
   return (
     <div className={classnames('calculator', className)}>
       <div className="close">
-        <button onClick={onClose}>X</button>
+        <button onClick={onClose}>&times;</button>
       </div>
       <div className="calculator-display">
         <CalculatorDisplay text={displayValue} />

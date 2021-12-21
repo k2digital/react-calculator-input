@@ -1,0 +1,48 @@
+.styled.numeric-input-component .calculator {
+  background-color: #e5e5f7;
+  background-image:  repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient(#444cf755, #444cf7);
+  border-radius: 1em;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
+  font-size: 9px;
+  opacity: 0.8;
+  padding: 1em 1.5em;
+}
+
+.styled.numeric-input-component input,
+.styled.numeric-input-component .calculator-display .display,
+.styled.numeric-input-component .calculator .confirmbutton,
+.styled.numeric-input-component .calculator .button {
+  border: 1px solid rgb(0 0 0 / 10%);
+  background: white;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
+  border-radius: .3em;
+}
+
+.styled.numeric-input-component .calculator .numerickeys-row .button:first-child {
+  margin-left: 0;
+}
+
+.styled.numeric-input-component .calculator-display .display {
+  margin: 0 0 1em 0;
+}
+
+.styled.numeric-input-component .calculator-display .display p {
+  color: black;
+}
+
+.styled.numeric-input-component .close button {
+  background: white;
+  border-radius: 50%;
+  color: #444cf7;
+  font-family: monospace;
+  font-size: 5em;
+  height: 1.2em;
+  line-height: 1.2em;
+  margin: 0 0 0.1em 0;
+  padding: 0;
+  position: relative;
+  right: -0.65em;
+  text-align: center;
+  top: -0.65em;
+  width: 1.2em;
+}
