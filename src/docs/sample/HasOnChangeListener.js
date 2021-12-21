@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-import NumericInput from 'react-calculator-input';
+import NumericInput from '../../../';
 
 const makeMessage = (count, value) => `changeCount: ${count}, value: ${value}`;
 

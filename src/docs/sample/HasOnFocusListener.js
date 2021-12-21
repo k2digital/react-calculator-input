@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-import NumericInput from 'react-calculator-input';
+import NumericInput from '../../../';
 
 export default function HasOnFocusListener() {
   const initialValue = 10;
